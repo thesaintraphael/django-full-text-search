@@ -8,6 +8,7 @@ services:
       - postgres_data:/var/lib/postgresql/data
   web:
     build: .
+    restart: always
     env_file: ./.env
     command: python manage.py runserver 0.0.0.0:8000
     volumes:
