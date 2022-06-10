@@ -1,5 +1,5 @@
 from django.db.models import Q
-from django.contrib.postgres.search import SearchVector
+from django.contrib.postgres.search import SearchVector, SearchQuery, SearchRank
 
 from rest_framework.generics import ListAPIView
 
@@ -35,6 +35,20 @@ class QuoteListAPIView(ListAPIView):
         return qs.annotate(search=SearchVector("name", "quote"))
 
     def get_queryset(self):
-        """Annotaing the queryset with search vector"""
 
-        return self._annotate_with_search_vector(self.queryset).filter(search=self.search_term)
+        if self.search_term:
+
+            # fields that will be searched
+            search_vector = SearchVector("name", "quote")
+
+            # translates the words provided to us as a query from the form, passes them through a
+            # stemming algorithm, and then it looks for matches for all of the resulting terms.
+            search_query = SearchQuery(self.search_term)
+
+            # allow us to order the results by the relevance of the search
+            rank = SearchRank(search_vector, search_query)
+
+            # apply the search
+            return Quote.objects.annotate(search=search_vector, rank=rank).filter(search=search_query).order_by("-rank")
+
+        return super().get_queryset()
