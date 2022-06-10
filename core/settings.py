@@ -43,6 +43,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
+    "django.contrib.postgres",  # added to use full-text search with Postgres
+
     # django apps
     "quotes",
 

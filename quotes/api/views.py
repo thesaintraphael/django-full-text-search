@@ -1,5 +1,7 @@
-from rest_framework.generics import ListAPIView
 from django.db.models import Q
+from django.contrib.postgres.search import SearchVector
+
+from rest_framework.generics import ListAPIView
 
 
 from .serializers import QuoteSerializer
@@ -10,15 +12,29 @@ class QuoteListAPIView(ListAPIView):
     queryset = Quote.objects.all()
     serializer_class = QuoteSerializer
 
-    def _apply_basic_search(self, qs):
-        """Searching whether the name or quote contains search term"""
+    @property
+    def search_term(self):
+        return self.request.query_params.get("search", "")
 
-        search = self.request.query_params.get("search", "")
+    def _apply_basic_search(self, qs):
+        """Searching whether the name or quote contains search term
+
+        Note: after adding django.contrib.postgres.search to installed apps, Single field searches (with Q object or simple filter)
+              will be treated as full-text searches.
+
+        """
 
         return qs.filter(
-            Q(name__icontains=search) |
-            Q(quote__icontains=search)
+            Q(name__icontains=self.search_term) |
+            Q(quote__icontains=self.search_term)
         )
 
+    def _annotate_with_search_vector(self, qs):
+        """Annotating the queryset with search vector"""
+
+        return qs.annotate(search=SearchVector("name", "quote"))
+
     def get_queryset(self):
-        return self._apply_basic_search(super().get_queryset())
+        """Annotaing the queryset with search vector"""
+
+        return self._annotate_with_search_vector(self.queryset).filter(search=self.search_term)
