@@ -39,7 +39,8 @@ class QuoteListAPIView(ListAPIView):
         if self.search_term:
 
             # fields that will be searched
-            search_vector = SearchVector("name", "quote")
+            search_vector = SearchVector(
+                "name", weight="B") + SearchVector("quote", weight="A")
 
             # translates the words provided to us as a query from the form, passes them through a
             # stemming algorithm, and then it looks for matches for all of the resulting terms.
