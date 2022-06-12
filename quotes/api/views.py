@@ -19,7 +19,7 @@ class QuoteListAPIView(ListAPIView):
     def _apply_basic_search(self, qs):
         """Searching whether the name or quote contains search term
 
-        Note: after adding django.contrib.postgres.search to installed apps, Single field searches (with Q object or simple filter)
+        Note: after adding django.contrib.postgres to installed apps, Single field searches (with Q object or simple filter)
               will be treated as full-text searches.
 
         """
