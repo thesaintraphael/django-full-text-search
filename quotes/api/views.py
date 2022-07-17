@@ -1,5 +1,5 @@
 from django.db.models import Q
-from django.contrib.postgres.search import SearchVector, SearchQuery, SearchRank
+from django.contrib.postgres.search import SearchVector, SearchQuery, SearchRank, TrigramSimilarity
 
 from rest_framework.generics import ListAPIView
 
@@ -50,6 +50,18 @@ class QuoteListAPIView(ListAPIView):
             rank = SearchRank(search_vector, search_query)
 
             # apply the search
-            return Quote.objects.annotate(search=search_vector, rank=rank).filter(search=search_query).order_by("-rank")
+            return super().get_queryset().annotate(search=search_vector, rank=rank
+                                                   ).filter(search=search_query, rank__gt=0.001).order_by("-rank")
+
+        return super().get_queryset()
+
+
+class QuoteListAPIViewWithSimilarity(QuoteListAPIView):
+
+    def get_queryset(self):
+        if self.search_term:
+
+            return Quote.objects.all().annotate(similarity=TrigramSimilarity("quote", self.search_term)
+                                                ).filter(similarity__gt=0.01).order_by("-similarity")
 
         return super().get_queryset()
