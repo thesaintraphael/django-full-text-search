@@ -61,8 +61,6 @@ class QuoteListAPIViewWithSimilarity(QuoteListAPIView):
     def get_queryset(self):
         if self.search_term:
 
-            print("?")
-
             return Quote.objects.all().annotate(similarity=TrigramSimilarity("quote", self.search_term)
                                                 ).filter(similarity__gt=0.01).order_by("-similarity")
 
